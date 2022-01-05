@@ -134,16 +134,76 @@ function MergeName(xmlDoc, first, middle, last, suffix) {
         full = full + suffix;
     }
     //full is now the appropriate name, replace the first instance of anything with a new name node, and then remove the rest completely
-    //For now I will assume that I have the first name and expand later
+    //If we have a first name, among other things
     if (first != "") {
         var nameNodes = xmlDoc.getElementsByTagName('name');
-        var jobDone = false;
         for (var i = 0; i < nameNodes.length; i++) {
-            if (nameNodes[i].getAttribute('part') == "first") {
+            var currentPart = nameNodes[i].getAttribute('part');
+            if (currentPart == "first" && first != "") {
                 nameNodes[i].removeAttribute('part');
                 var len = nameNodes[i].childNodes[0].nodeValue.length;
                 nameNodes[i].childNodes[0].replaceData(0, len, full);
-                break;
+                first = "";
+            }
+            else if (middle != "" && currentPart == "middle") {
+                xmlDoc.removeChild(nameNodes[i]);
+                middle = "";
+            }
+            else if (last != "" && currentPart == "last") {
+                xmlDoc.removeChild(nameNodes[i]);
+                middle = "";
+            }
+            else if (suffix != "" && currentPart == "suffix") {
+                xmlDoc.removeChild(nameNodes[i]);
+                suffix = "";
+            }
+        }
+    }
+    else if (middle != "") { //we start with a middle initial or name
+        var nameNodes = xmlDoc.getElementsByTagName('name');
+        for (var i = 0; i < nameNodes.length; i++) {
+            var currentPart = nameNodes[i].getAttribute('part');
+            if (currentPart == "middle" && middle != "") {
+                nameNodes[i].removeAttribute('part');
+                var len = nameNodes[i].childNodes[0].nodeValue.length;
+                nameNodes[i].childNodes[0].replaceData(0, len, full);
+                middle = "";
+            }
+            else if (last != "" && currentPart == "last") {
+                xmlDoc.removeChild(nameNodes[i]);
+                last = "";
+            }
+            else if (suffix != "" && currentPart == "suffix") {
+                xmlDoc.removeChild(nameNodes[i]);
+                suffix = "";
+            }
+        }
+    }
+    else if (last != "") { //we start with a last initial or name
+        var nameNodes = xmlDoc.getElementsByTagName('name');
+        for (var i = 0; i < nameNodes.length; i++) {
+            var currentPart = nameNodes[i].getAttribute('part');
+            if (currentPart == "last" && last != "") {
+                nameNodes[i].removeAttribute('part');
+                var len = nameNodes[i].childNodes[0].nodeValue.length;
+                nameNodes[i].childNodes[0].replaceData(0, len, full);
+                last = "";
+            }
+            else if (suffix != "" && currentPart == "suffix") {
+                xmlDoc.removeChild(nameNodes[i]);
+                suffix = "";
+            }
+        }
+    }
+    else if (last != "") { //we only have a suffix...
+        var nameNodes = xmlDoc.getElementsByTagName('name');
+        for (var i = 0; i < nameNodes.length; i++) {
+            var currentPart = nameNodes[i].getAttribute('part');
+            if (currentPart == "suffix" && suffix != "") {
+                nameNodes[i].removeAttribute('part');
+                var len = nameNodes[i].childNodes[0].nodeValue.length;
+                nameNodes[i].childNodes[0].replaceData(0, len, full);
+                suffix = "";
             }
         }
     }
