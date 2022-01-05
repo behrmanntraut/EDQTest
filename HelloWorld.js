@@ -8,28 +8,131 @@ var results = [];
 var XMLValidator = require("fast-xml-parser").XMLValidator;
 var XMLParser = require('fast-xml-parser').XMLParser;
 var parser = new XMLParser();
+//DOM
+var DOMParser = require('@xmldom/xmldom').DOMParser;
+var XMLSerializer = require('@xmldom/xmldom').XMLSerializer;
+var Dparser = new DOMParser();
+var DtoString = new XMLSerializer();
 //this appears to be a it gets done as it comes in function, which is why things aren't behaving the way I expect, need to update items as needed
-fs.createReadStream('adf_raw.csv')
+fs.createReadStream('experiment.csv')
     .pipe(csv(["Id", "adf"]))
     .on('data', function (data) {
     //data.Id will return the Id number (As a string? not used to typing in ts yet)
     //data.adf will return the XML
-    var result = XMLValidator.validate(data.adf, {
+    validation(data.adf);
+});
+function validation(rawData) {
+    var result = XMLValidator.validate(rawData, {
         allowBooleanAttributes: true
     });
     if (typeof result == "boolean") {
-        var jsonObj = parser.parse(data.adf);
-        myFunc(jsonObj.adf);
-        //myFunc(test);
+        var jsonObj = parser.parse(rawData);
+        manipulate(rawData);
     }
     else {
         //invalid XML, do nothing
     }
-});
-function myFunc(props) {
-    if (props.prospect.vendor.contact == undefined) {
+}
+//right now just returns every instance of the name tag, and if it has a part associated to it that as well
+function manipulate(myXML) {
+    var Doc = Dparser.parseFromString(myXML, "text/xml");
+    var names = Doc.getElementsByTagName('name');
+    var first = "";
+    var middle = "";
+    var last = "";
+    var suffix = "";
+    for (var i = 0; i < names.length; i++) {
+        //get attribute gives me the part=x in the tag, the firstchild.nodevalue gives me the text between the tags
+        var currentPart = names[i].getAttribute('part');
+        if (currentPart == "full") { //converts all full names into plain names
+            names[i].removeAttribute('part');
+        }
+        else if (currentPart == "first") {
+            if (first != "") {
+                MergeNames(Doc, first, middle, last, suffix);
+                first = "";
+                middle = "";
+                last = "";
+                suffix = "";
+            }
+            first = names[i].firstChild.nodevalue;
+        }
+        else if (currentPart == "middle") {
+            if (middle != "") {
+                MergeNames(Doc, first, middle, last, suffix);
+                first = "";
+                middle = "";
+                last = "";
+                suffix = "";
+            }
+            middle = names[i].firstChild.nodevalue;
+        }
+        else if (currentPart == "last") {
+            if (last != "") {
+                MergeNames(Doc, first, middle, last, suffix);
+                first = "";
+                middle = "";
+                last = "";
+                suffix = "";
+            }
+            last = names[i].firstChild.nodevalue;
+        }
+        else if (currentPart == "suffix") {
+            if (suffix != "") {
+                MergeNames(Doc, first, middle, last, suffix);
+                first = "";
+                middle = "";
+                last = "";
+                suffix = "";
+            }
+            suffix = names[i].firstChild.nodevalue;
+        }
+        else {
+            MergeNames(Doc, first, middle, last, suffix);
+            first = "";
+            middle = "";
+            last = "";
+            suffix = "";
+            //just wrap up anything I have already done, this particular tag is all set
+        }
     }
-    else {
-        console.log("-->  " + props.prospect.vendor.contact);
+    MergeNames(Doc, first, middle, last, suffix);
+    console.log(DtoString.serializeToString(Doc));
+}
+//combines a first middle last and suffix into one single string, adding spaces appropriately
+function MergeNames(xmlDoc, first, middle, last, suffix) {
+    if (first != "" || middle != "" || last != "" || suffix != "") {
+        MergeName(xmlDoc, first, middle, last, suffix);
     }
+}
+//actual implementation, previous simmilar named func is a check to see if this should be run
+function MergeName(xmlDoc, first, middle, last, suffix) {
+    var full = "";
+    var elementBefore = false;
+    if (first != "") {
+        full = full + first;
+        elementBefore = true;
+    }
+    if (middle != "") {
+        if (elementBefore) {
+            full = full + " ";
+        }
+        full = full + middle;
+        elementBefore = true;
+    }
+    if (last != "") {
+        if (elementBefore) {
+            full = full + " ";
+        }
+        full = full + last;
+        elementBefore = true;
+    }
+    if (suffix != "") {
+        if (elementBefore) {
+            full = full + " ";
+        }
+        full = full + suffix;
+    }
+    //full is now the appropriate name, replace the first instance of anything with a new name node, and then remove the rest completely
+    //TODO: the above comment
 }
