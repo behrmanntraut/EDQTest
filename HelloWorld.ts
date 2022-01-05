@@ -13,7 +13,7 @@ const {XMLSerializer} = require('@xmldom/xmldom');
 var Dparser = new DOMParser();
 var DtoString = new XMLSerializer();
 //this appears to be a it gets done as it comes in function, which is why things aren't behaving the way I expect, need to update items as needed
-fs.createReadStream('experiment.csv')
+fs.createReadStream('adf_raw.csv')
   .pipe(csv(["Id","adf"]))
   .on('data', (data) => {
     //data.Id will return the Id number (As a string? not used to typing in ts yet)
@@ -39,6 +39,7 @@ fs.createReadStream('experiment.csv')
   function manipulate(myXML:string){  
     var Doc = Dparser.parseFromString(myXML,"text/xml");
     let names = Doc.getElementsByTagName('name');
+    
     var first = "";
     var middle = "";
     var last = "";
@@ -56,7 +57,11 @@ fs.createReadStream('experiment.csv')
             last="";
             suffix="";
           }
+          try{
           first = names[i].firstChild.nodeValue;
+        }catch (error){
+          first="";
+        }
       }else if(currentPart=="middle"){
         if(middle!=""){
           MergeNames(Doc,first,middle,last,suffix);
@@ -65,7 +70,11 @@ fs.createReadStream('experiment.csv')
           last="";
           suffix="";
         }
-        middle = names[i].firstChild.nodeValue;
+        try{
+          middle = names[i].firstChild.nodeValue;
+        }catch (error){
+          middle="";
+        }
       }else if(currentPart=="last"){
         if(last!=""){
           MergeNames(Doc,first,middle,last,suffix);
@@ -74,7 +83,11 @@ fs.createReadStream('experiment.csv')
           last="";
           suffix="";
         }
+        try{
         last = names[i].firstChild.nodeValue;
+      }catch (error){
+        last="";
+      }
       }else if(currentPart=="suffix"){
         if(suffix!=""){
           MergeNames(Doc,first,middle,last,suffix);
@@ -83,7 +96,11 @@ fs.createReadStream('experiment.csv')
           last="";
           suffix="";
         }
+        try{
         suffix = names[i].firstChild.nodeValue;
+      }catch (error){
+        middle="";
+      }
       }else{
         MergeNames(Doc,first,middle,last,suffix);
         first="";
@@ -95,7 +112,7 @@ fs.createReadStream('experiment.csv')
       
     }
     MergeNames(Doc,first,middle,last,suffix);
-    console.log(DtoString.serializeToString(Doc));//print out the XML as a string, after my changes
+    //console.log(DtoString.serializeToString(Doc));//print out the XML as a string, after my changes
   }
 
   //combines a first middle last and suffix into one single string, adding spaces appropriately
@@ -141,7 +158,12 @@ fs.createReadStream('experiment.csv')
           let currentPart = nameNodes[i].getAttribute('part');
           if(currentPart =="first" && first!=""){
             nameNodes[i].removeAttribute('part');
-            let len = nameNodes[i].childNodes[0].nodeValue.length;
+            var len=0;
+            try{
+              len = nameNodes[i].childNodes[0].nodeValue.length;
+              }catch (error){
+                len=0;
+              }
             nameNodes[i].childNodes[0].replaceData(0,len,full);
             first="";
           }else if(middle!="" && currentPart=="middle"){
@@ -161,7 +183,12 @@ fs.createReadStream('experiment.csv')
           let currentPart = nameNodes[i].getAttribute('part');
           if(currentPart =="middle" && middle!=""){
             nameNodes[i].removeAttribute('part');
-            let len = nameNodes[i].childNodes[0].nodeValue.length;
+            var len=0;
+            try{
+              len = nameNodes[i].childNodes[0].nodeValue.length;
+              }catch (error){
+                len=0;
+              }
             nameNodes[i].childNodes[0].replaceData(0,len,full);
             middle="";
           }else if(last!="" && currentPart=="last"){
@@ -178,7 +205,12 @@ fs.createReadStream('experiment.csv')
           let currentPart = nameNodes[i].getAttribute('part');
           if(currentPart =="last" && last!=""){
             nameNodes[i].removeAttribute('part');
-            let len = nameNodes[i].childNodes[0].nodeValue.length;
+            var len=0;
+            try{
+              len = nameNodes[i].childNodes[0].nodeValue.length;
+              }catch (error){
+                len=0;
+              }
             nameNodes[i].childNodes[0].replaceData(0,len,full);
             last="";
           }else if(suffix!="" && currentPart=="suffix"){
@@ -192,7 +224,12 @@ fs.createReadStream('experiment.csv')
           let currentPart = nameNodes[i].getAttribute('part');
           if(currentPart =="suffix" && suffix!=""){
             nameNodes[i].removeAttribute('part');
-            let len = nameNodes[i].childNodes[0].nodeValue.length;
+            var len=0;
+            try{
+              len = nameNodes[i].childNodes[0].nodeValue.length;
+              }catch (error){
+                len=0;
+              }
             nameNodes[i].childNodes[0].replaceData(0,len,full);
             suffix="";
           }

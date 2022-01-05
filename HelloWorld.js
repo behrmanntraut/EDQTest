@@ -14,7 +14,7 @@ var XMLSerializer = require('@xmldom/xmldom').XMLSerializer;
 var Dparser = new DOMParser();
 var DtoString = new XMLSerializer();
 //this appears to be a it gets done as it comes in function, which is why things aren't behaving the way I expect, need to update items as needed
-fs.createReadStream('experiment.csv')
+fs.createReadStream('adf_raw.csv')
     .pipe(csv(["Id", "adf"]))
     .on('data', function (data) {
     //data.Id will return the Id number (As a string? not used to typing in ts yet)
@@ -55,7 +55,12 @@ function manipulate(myXML) {
                 last = "";
                 suffix = "";
             }
-            first = names[i].firstChild.nodeValue;
+            try {
+                first = names[i].firstChild.nodeValue;
+            }
+            catch (error) {
+                first = "";
+            }
         }
         else if (currentPart == "middle") {
             if (middle != "") {
@@ -65,7 +70,12 @@ function manipulate(myXML) {
                 last = "";
                 suffix = "";
             }
-            middle = names[i].firstChild.nodeValue;
+            try {
+                middle = names[i].firstChild.nodeValue;
+            }
+            catch (error) {
+                middle = "";
+            }
         }
         else if (currentPart == "last") {
             if (last != "") {
@@ -75,7 +85,12 @@ function manipulate(myXML) {
                 last = "";
                 suffix = "";
             }
-            last = names[i].firstChild.nodeValue;
+            try {
+                last = names[i].firstChild.nodeValue;
+            }
+            catch (error) {
+                last = "";
+            }
         }
         else if (currentPart == "suffix") {
             if (suffix != "") {
@@ -85,7 +100,12 @@ function manipulate(myXML) {
                 last = "";
                 suffix = "";
             }
-            suffix = names[i].firstChild.nodeValue;
+            try {
+                suffix = names[i].firstChild.nodeValue;
+            }
+            catch (error) {
+                middle = "";
+            }
         }
         else {
             MergeNames(Doc, first, middle, last, suffix);
@@ -97,7 +117,7 @@ function manipulate(myXML) {
         }
     }
     MergeNames(Doc, first, middle, last, suffix);
-    console.log(DtoString.serializeToString(Doc)); //print out the XML as a string, after my changes
+    //console.log(DtoString.serializeToString(Doc));//print out the XML as a string, after my changes
 }
 //combines a first middle last and suffix into one single string, adding spaces appropriately
 function MergeNames(xmlDoc, first, middle, last, suffix) {
@@ -141,7 +161,13 @@ function MergeName(xmlDoc, first, middle, last, suffix) {
             var currentPart = nameNodes[i].getAttribute('part');
             if (currentPart == "first" && first != "") {
                 nameNodes[i].removeAttribute('part');
-                var len = nameNodes[i].childNodes[0].nodeValue.length;
+                var len = 0;
+                try {
+                    len = nameNodes[i].childNodes[0].nodeValue.length;
+                }
+                catch (error) {
+                    len = 0;
+                }
                 nameNodes[i].childNodes[0].replaceData(0, len, full);
                 first = "";
             }
@@ -165,7 +191,13 @@ function MergeName(xmlDoc, first, middle, last, suffix) {
             var currentPart = nameNodes[i].getAttribute('part');
             if (currentPart == "middle" && middle != "") {
                 nameNodes[i].removeAttribute('part');
-                var len = nameNodes[i].childNodes[0].nodeValue.length;
+                var len = 0;
+                try {
+                    len = nameNodes[i].childNodes[0].nodeValue.length;
+                }
+                catch (error) {
+                    len = 0;
+                }
                 nameNodes[i].childNodes[0].replaceData(0, len, full);
                 middle = "";
             }
@@ -185,7 +217,13 @@ function MergeName(xmlDoc, first, middle, last, suffix) {
             var currentPart = nameNodes[i].getAttribute('part');
             if (currentPart == "last" && last != "") {
                 nameNodes[i].removeAttribute('part');
-                var len = nameNodes[i].childNodes[0].nodeValue.length;
+                var len = 0;
+                try {
+                    len = nameNodes[i].childNodes[0].nodeValue.length;
+                }
+                catch (error) {
+                    len = 0;
+                }
                 nameNodes[i].childNodes[0].replaceData(0, len, full);
                 last = "";
             }
@@ -201,7 +239,13 @@ function MergeName(xmlDoc, first, middle, last, suffix) {
             var currentPart = nameNodes[i].getAttribute('part');
             if (currentPart == "suffix" && suffix != "") {
                 nameNodes[i].removeAttribute('part');
-                var len = nameNodes[i].childNodes[0].nodeValue.length;
+                var len = 0;
+                try {
+                    len = nameNodes[i].childNodes[0].nodeValue.length;
+                }
+                catch (error) {
+                    len = 0;
+                }
                 nameNodes[i].childNodes[0].replaceData(0, len, full);
                 suffix = "";
             }
