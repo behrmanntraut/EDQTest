@@ -39,10 +39,10 @@ fs.createReadStream('experiment.csv')
   function manipulate(myXML:string){  
     var Doc = Dparser.parseFromString(myXML,"text/xml");
     let names = Doc.getElementsByTagName('name');
-    let first = "";
-    let middle = "";
-    let last = "";
-    let suffix = "";
+    var first = "";
+    var middle = "";
+    var last = "";
+    var suffix = "";
     for(let i=0;i<names.length;i++){
       //get attribute gives me the part=x in the tag, the firstchild.nodevalue gives me the text between the tags
       let currentPart = names[i].getAttribute('part');
@@ -56,7 +56,7 @@ fs.createReadStream('experiment.csv')
             last="";
             suffix="";
           }
-          first = names[i].firstChild.nodevalue;
+          first = names[i].firstChild.nodeValue;
       }else if(currentPart=="middle"){
         if(middle!=""){
           MergeNames(Doc,first,middle,last,suffix);
@@ -65,7 +65,7 @@ fs.createReadStream('experiment.csv')
           last="";
           suffix="";
         }
-        middle = names[i].firstChild.nodevalue;
+        middle = names[i].firstChild.nodeValue;
       }else if(currentPart=="last"){
         if(last!=""){
           MergeNames(Doc,first,middle,last,suffix);
@@ -74,7 +74,7 @@ fs.createReadStream('experiment.csv')
           last="";
           suffix="";
         }
-        last = names[i].firstChild.nodevalue;
+        last = names[i].firstChild.nodeValue;
       }else if(currentPart=="suffix"){
         if(suffix!=""){
           MergeNames(Doc,first,middle,last,suffix);
@@ -83,7 +83,7 @@ fs.createReadStream('experiment.csv')
           last="";
           suffix="";
         }
-        suffix = names[i].firstChild.nodevalue;
+        suffix = names[i].firstChild.nodeValue;
       }else{
         MergeNames(Doc,first,middle,last,suffix);
         first="";
@@ -107,7 +107,7 @@ fs.createReadStream('experiment.csv')
 
   //actual implementation, previous simmilar named func is a check to see if this should be run
   function MergeName(xmlDoc, first:string,middle:string,last:string,suffix:string){
-    let full = "";
+    var full = "";
       let elementBefore = false;
       if(first!=""){
         full = full + first;
@@ -133,10 +133,18 @@ fs.createReadStream('experiment.csv')
         }
         full = full + suffix;
       }
-
       //full is now the appropriate name, replace the first instance of anything with a new name node, and then remove the rest completely
       //For now I will assume that I have the first name and expand later
       if(first!=""){
-
+        let nameNodes = xmlDoc.getElementsByTagName('name');
+        var jobDone = false;
+        for(let i=0;i<nameNodes.length;i++){
+          if(nameNodes[i].getAttribute('part')=="first"){
+            nameNodes[i].removeAttribute('part');
+            let len = nameNodes[i].childNodes[0].nodeValue.length;
+            nameNodes[i].childNodes[0].replaceData(0,len,full);
+            break;
+          }
+        }
       }
   }

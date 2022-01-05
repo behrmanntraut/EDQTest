@@ -55,7 +55,7 @@ function manipulate(myXML) {
                 last = "";
                 suffix = "";
             }
-            first = names[i].firstChild.nodevalue;
+            first = names[i].firstChild.nodeValue;
         }
         else if (currentPart == "middle") {
             if (middle != "") {
@@ -65,7 +65,7 @@ function manipulate(myXML) {
                 last = "";
                 suffix = "";
             }
-            middle = names[i].firstChild.nodevalue;
+            middle = names[i].firstChild.nodeValue;
         }
         else if (currentPart == "last") {
             if (last != "") {
@@ -75,7 +75,7 @@ function manipulate(myXML) {
                 last = "";
                 suffix = "";
             }
-            last = names[i].firstChild.nodevalue;
+            last = names[i].firstChild.nodeValue;
         }
         else if (currentPart == "suffix") {
             if (suffix != "") {
@@ -85,7 +85,7 @@ function manipulate(myXML) {
                 last = "";
                 suffix = "";
             }
-            suffix = names[i].firstChild.nodevalue;
+            suffix = names[i].firstChild.nodeValue;
         }
         else {
             MergeNames(Doc, first, middle, last, suffix);
@@ -97,7 +97,7 @@ function manipulate(myXML) {
         }
     }
     MergeNames(Doc, first, middle, last, suffix);
-    console.log(DtoString.serializeToString(Doc));
+    console.log(DtoString.serializeToString(Doc)); //print out the XML as a string, after my changes
 }
 //combines a first middle last and suffix into one single string, adding spaces appropriately
 function MergeNames(xmlDoc, first, middle, last, suffix) {
@@ -134,5 +134,17 @@ function MergeName(xmlDoc, first, middle, last, suffix) {
         full = full + suffix;
     }
     //full is now the appropriate name, replace the first instance of anything with a new name node, and then remove the rest completely
-    //TODO: the above comment
+    //For now I will assume that I have the first name and expand later
+    if (first != "") {
+        var nameNodes = xmlDoc.getElementsByTagName('name');
+        var jobDone = false;
+        for (var i = 0; i < nameNodes.length; i++) {
+            if (nameNodes[i].getAttribute('part') == "first") {
+                nameNodes[i].removeAttribute('part');
+                var len = nameNodes[i].childNodes[0].nodeValue.length;
+                nameNodes[i].childNodes[0].replaceData(0, len, full);
+                break;
+            }
+        }
+    }
 }
