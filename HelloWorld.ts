@@ -53,7 +53,7 @@ fs.createReadStream('adf_raw.csv')
     var Doc = Dparser.parseFromString(myXML,"text/xml");
     let names = Doc.getElementsByTagName("name");
     for(let i=0;i<names.length;i++){
-      attrs.add(names[i].getAttribute('sequence'));
+      attrs.add(names[i].getAttribute('type'));
     }
     console.log(attrs);
   }
@@ -61,8 +61,13 @@ fs.createReadStream('adf_raw.csv')
   //returns the xml string after the names have been condensed
   function manipulate(myXML:string){  
     var Doc = Dparser.parseFromString(myXML,"text/xml");
-    let names = Doc.getElementsByTagName('name');
-    
+    let allTags = Doc.getElementsByTagName("*");
+    let names = [];
+    for(let i=0;i<allTags.length;i++){
+      if(allTags[i].tagName=="name"){
+        names.push(allTags[i]);
+      }
+    }
     var first = "";
     var middle = "";
     var last = "";
@@ -70,7 +75,6 @@ fs.createReadStream('adf_raw.csv')
     var title = "";
     for(let i=0;i<names.length;i++){
       //get attribute gives me the part=x in the tag, the firstchild.nodevalue gives me the text between the tags
-      
       let currentPart = names[i].getAttribute('part');
       if(currentPart=="full"){//converts all full names into plain names
         names[i].removeAttribute('part');

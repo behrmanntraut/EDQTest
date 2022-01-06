@@ -50,7 +50,7 @@ function findAttrs(myXML) {
     var Doc = Dparser.parseFromString(myXML, "text/xml");
     var names = Doc.getElementsByTagName("name");
     for (var i = 0; i < names.length; i++) {
-        attrs.add(names[i].getAttribute('sequence'));
+        attrs.add(names[i].getAttribute('type'));
     }
     console.log(attrs);
 }
@@ -58,7 +58,13 @@ function findAttrs(myXML) {
 //returns the xml string after the names have been condensed
 function manipulate(myXML) {
     var Doc = Dparser.parseFromString(myXML, "text/xml");
-    var names = Doc.getElementsByTagName('name');
+    var allTags = Doc.getElementsByTagName("*");
+    var names = [];
+    for (var i = 0; i < allTags.length; i++) {
+        if (allTags[i].tagName == "name") {
+            names.push(allTags[i]);
+        }
+    }
     var first = "";
     var middle = "";
     var last = "";
