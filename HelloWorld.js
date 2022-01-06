@@ -15,7 +15,7 @@ var Dparser = new DOMParser();
 var DtoString = new XMLSerializer();
 var attrs = new Set();
 //this appears to be a it gets done as it comes in function, which is why things aren't behaving the way I expect, need to update items as needed
-fs.createReadStream('experiment.csv')
+fs.createReadStream('adf_raw.csv')
     .pipe(csv(["Id", "adf"]))
     .on('data', function (data) {
     //data.Id will return the Id number (As a string? not used to typing in ts yet)
@@ -29,8 +29,8 @@ function validation(rawData) {
     if (typeof result == "boolean") {
         var jsonObj = parser.parse(rawData);
         var x = manipulate(rawData);
-        console.log(x);
-        //findAttrs(rawData);
+        //console.log(x);
+        findAttrs(x);
     }
     else {
         //invalid XML, do nothing
@@ -38,9 +38,9 @@ function validation(rawData) {
 }
 function findAttrs(myXML) {
     var Doc = Dparser.parseFromString(myXML, "text/xml");
-    var names = Doc.getElementsByTagName('name');
+    var names = Doc.getElementsByTagName("name");
     for (var i = 0; i < names.length; i++) {
-        attrs.add(names[i].getAttribute('part'));
+        attrs.add(names[i].getAttribute('sequence'));
     }
     console.log(attrs);
 }
@@ -59,6 +59,9 @@ function manipulate(myXML) {
         var currentPart = names[i].getAttribute('part');
         if (currentPart == "full") { //converts all full names into plain names
             names[i].removeAttribute('part');
+            if (names[i].getAttribute('sequence') != '') {
+                names[i].removeAttribute('sequence');
+            }
         }
         else if (currentPart == "title") {
             if (title != "") {
@@ -251,6 +254,9 @@ function firstNamePart(node, str, strValue, fullName) {
     var currentPart = node.getAttribute('part');
     if (currentPart == strValue && str != "") {
         node.removeAttribute('part');
+        if (node.getAttribute('sequence') != '') {
+            node.removeAttribute('sequence');
+        }
         var len = 0;
         try {
             len = node.childNodes[0].nodeValue.length;

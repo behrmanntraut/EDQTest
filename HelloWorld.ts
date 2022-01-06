@@ -14,7 +14,7 @@ var Dparser = new DOMParser();
 var DtoString = new XMLSerializer();
 var attrs = new Set();
 //this appears to be a it gets done as it comes in function, which is why things aren't behaving the way I expect, need to update items as needed
-fs.createReadStream('experiment.csv')
+fs.createReadStream('adf_raw.csv')
   .pipe(csv(["Id","adf"]))
   .on('data', (data) => {
     //data.Id will return the Id number (As a string? not used to typing in ts yet)
@@ -30,7 +30,7 @@ fs.createReadStream('experiment.csv')
     if(typeof result == "boolean"){
         let jsonObj = parser.parse(rawData);
         let x = manipulate(rawData);
-        console.log(x);
+        //console.log(x);
         //findAttrs(rawData);
     }else{
         //invalid XML, do nothing
@@ -40,9 +40,9 @@ fs.createReadStream('experiment.csv')
   
   function findAttrs(myXML:String){
     var Doc = Dparser.parseFromString(myXML,"text/xml");
-    let names = Doc.getElementsByTagName('name');
+    let names = Doc.getElementsByTagName("name");
     for(let i=0;i<names.length;i++){
-      attrs.add(names[i].getAttribute('part'));
+      attrs.add(names[i].getAttribute('sequence'));
     }
     console.log(attrs);
   }
@@ -59,9 +59,13 @@ fs.createReadStream('experiment.csv')
     var title = "";
     for(let i=0;i<names.length;i++){
       //get attribute gives me the part=x in the tag, the firstchild.nodevalue gives me the text between the tags
+      
       let currentPart = names[i].getAttribute('part');
       if(currentPart=="full"){//converts all full names into plain names
         names[i].removeAttribute('part');
+        if(names[i].getAttribute('sequence')!=''){
+          names[i].removeAttribute('sequence');
+        }
       }else if(currentPart=="title"){
           if(title!=""){
             MergeNames(Doc,title,first,middle,last,suffix);
@@ -245,6 +249,9 @@ fs.createReadStream('experiment.csv')
       let currentPart = node.getAttribute('part');
       if(currentPart ==strValue && str!=""){
         node.removeAttribute('part');
+        if(node.getAttribute('sequence')!=''){
+          node.removeAttribute('sequence');
+        }
         var len=0;
         try{
           len = node.childNodes[0].nodeValue.length;
