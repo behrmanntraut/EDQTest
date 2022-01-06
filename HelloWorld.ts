@@ -13,12 +13,21 @@ const {XMLSerializer} = require('@xmldom/xmldom');
 var Dparser = new DOMParser();
 var DtoString = new XMLSerializer();
 var attrs = new Set();
+//csv writer
+const writerBuilder = require('csv-writer').createArrayCsvWriter;
+const writer = writerBuilder({
+  path: './output.csv',
+  header: ['Id','adf_data']
+});
+
+var outputResults = ["0","Default"];
 //this appears to be a it gets done as it comes in function, which is why things aren't behaving the way I expect, need to update items as needed
 fs.createReadStream('adf_raw.csv')
   .pipe(csv(["Id","adf"]))
   .on('data', (data) => {
     //data.Id will return the Id number (As a string? not used to typing in ts yet)
     //data.adf will return the XML
+    outputResults[0] = data.Id;
     validation(data.adf);
     
   });
@@ -30,6 +39,8 @@ fs.createReadStream('adf_raw.csv')
     if(typeof result == "boolean"){
         let jsonObj = parser.parse(rawData);
         let x = manipulate(rawData);
+        outputResults[1]=x;
+        writer.writeRecords([outputResults]);
         //console.log(x);
         //findAttrs(rawData);
     }else{
