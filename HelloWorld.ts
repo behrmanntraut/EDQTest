@@ -71,10 +71,11 @@ fs.createReadStream('experiment.csv')
             suffix="";
             title="";
           }
-          try{
+        try{
           title = names[i].firstChild.nodeValue;
         }catch (error){
-          first="";
+          Doc.removeChild(names[i]);
+          title="";
         }
       }else if(currentPart=="first"){
           if(first!=""){
@@ -84,9 +85,10 @@ fs.createReadStream('experiment.csv')
             last="";
             suffix="";
           }
-          try{
+        try{
           first = names[i].firstChild.nodeValue;
         }catch (error){
+          Doc.removeChild(names[i]);
           first="";
         }
       }else if(currentPart=="middle"){
@@ -100,6 +102,7 @@ fs.createReadStream('experiment.csv')
         try{
           middle = names[i].firstChild.nodeValue;
         }catch (error){
+          Doc.removeChild(names[i]);
           middle="";
         }
       }else if(currentPart=="last"){
@@ -110,9 +113,10 @@ fs.createReadStream('experiment.csv')
           last="";
           suffix="";
         }
-        try{
+      try{
         last = names[i].firstChild.nodeValue;
       }catch (error){
+        Doc.removeChild(names[i]);
         last="";
       }
       }else if(currentPart=="suffix"){
@@ -123,10 +127,11 @@ fs.createReadStream('experiment.csv')
           last="";
           suffix="";
         }
-        try{
+      try{
         suffix = names[i].firstChild.nodeValue;
       }catch (error){
-        middle="";
+        Doc.removeChild(names[i]);
+        suffix="";
       }
       }else{
         MergeNames(Doc,title,first,middle,last,suffix);
@@ -134,9 +139,9 @@ fs.createReadStream('experiment.csv')
         middle="";
         last="";
         suffix="";
-        //just wrap up anything I have already done, this particular tag is all set
       }
-      
+
+
     }
     MergeNames(Doc,title,first,middle,last,suffix);
     //console.log(DtoString.serializeToString(Doc));//print out the XML as a string, after my changes
@@ -228,6 +233,7 @@ fs.createReadStream('experiment.csv')
   //takes the DOM, the specific node, the stings to see if it is empty, and the part string to check for
   function checkAndRemove(xml,node,str,strValue):string{
     if(str!="" && node.getAttribute('part')==strValue){
+      //console.log("Removing node: " + strValue);
       xml.removeChild(node);
       return "";
     }

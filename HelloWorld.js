@@ -73,7 +73,8 @@ function manipulate(myXML) {
                 title = names[i].firstChild.nodeValue;
             }
             catch (error) {
-                first = "";
+                Doc.removeChild(names[i]);
+                title = "";
             }
         }
         else if (currentPart == "first") {
@@ -88,6 +89,7 @@ function manipulate(myXML) {
                 first = names[i].firstChild.nodeValue;
             }
             catch (error) {
+                Doc.removeChild(names[i]);
                 first = "";
             }
         }
@@ -103,6 +105,7 @@ function manipulate(myXML) {
                 middle = names[i].firstChild.nodeValue;
             }
             catch (error) {
+                Doc.removeChild(names[i]);
                 middle = "";
             }
         }
@@ -118,6 +121,7 @@ function manipulate(myXML) {
                 last = names[i].firstChild.nodeValue;
             }
             catch (error) {
+                Doc.removeChild(names[i]);
                 last = "";
             }
         }
@@ -133,7 +137,8 @@ function manipulate(myXML) {
                 suffix = names[i].firstChild.nodeValue;
             }
             catch (error) {
-                middle = "";
+                Doc.removeChild(names[i]);
+                suffix = "";
             }
         }
         else {
@@ -142,7 +147,6 @@ function manipulate(myXML) {
             middle = "";
             last = "";
             suffix = "";
-            //just wrap up anything I have already done, this particular tag is all set
         }
     }
     MergeNames(Doc, title, first, middle, last, suffix);
@@ -236,6 +240,7 @@ function MergeName(xmlDoc, title, first, middle, last, suffix) {
 //takes the DOM, the specific node, the stings to see if it is empty, and the part string to check for
 function checkAndRemove(xml, node, str, strValue) {
     if (str != "" && node.getAttribute('part') == strValue) {
+        //console.log("Removing node: " + strValue);
         xml.removeChild(node);
         return "";
     }
