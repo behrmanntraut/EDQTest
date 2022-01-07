@@ -22,7 +22,7 @@ var writer = writerBuilder({
 });
 var outputResults = ["0", "Default"];
 //this appears to be a it gets done as it comes in function, which is why things aren't behaving the way I expect, need to update items as needed
-fs.createReadStream('experiment.csv')
+fs.createReadStream('adf_raw.csv')
     .pipe(csv(["Id", "adf"]))
     .on('data', function (data) {
     //data.Id will return the Id number (As a string? not used to typing in ts yet)
@@ -37,12 +37,12 @@ function validation(rawData) {
     if (typeof result == "boolean") {
         var x = manipulateEmails(rawData);
         x = manipulateNames(x);
-        //outputResults[1]=x;
-        //writer.writeRecords([outputResults]);
+        outputResults[1] = x;
+        writer.writeRecords([outputResults]);
         //console.log(x);
         //findAttrs(rawData);
-        var jsonObj = parser.parse(x);
-        console.log(JSON.stringify(jsonObj, null, 4));
+        //let jsonObj = parser.parse(x);
+        //console.log(JSON.stringify(jsonObj,null,4));
         //let temp:models.Adf = jsonObj;
         //console.log(jsonObj.adf.prospect.email.value);
         /* */
@@ -71,7 +71,11 @@ function manipulateEmails(myXML) {
     for (var i = 0; i < emails.length; i++) {
         var newNode = Doc.createElement("email");
         var valNode = Doc.createElement("value");
-        var valText = Doc.createTextNode(emails[i].firstChild.nodeValue);
+        var valText = "";
+        try {
+            valText = Doc.createTextNode(emails[i].firstChild.nodeValue);
+        }
+        catch (error) { }
         valNode.appendChild(valText);
         newNode.appendChild(valNode);
         if (emails[i].getAttribute('preferredcontact') != '') {
