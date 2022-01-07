@@ -22,7 +22,7 @@ var writer = writerBuilder({
 });
 var outputResults = ["0", "Default"];
 //this appears to be a it gets done as it comes in function, which is why things aren't behaving the way I expect, need to update items as needed
-fs.createReadStream('adf_raw.csv')
+fs.createReadStream('experiment.csv')
     .pipe(csv(["Id", "adf"]))
     .on('data', function (data) {
     //data.Id will return the Id number (As a string? not used to typing in ts yet)
@@ -37,20 +37,22 @@ function validation(rawData) {
     if (typeof result == "boolean") {
         var x = manipulateEmails(rawData);
         x = manipulateNames(x);
-        outputResults[1] = x;
-        writer.writeRecords([outputResults]);
+        x = manipulatePhones(x);
+        //x = removeDuplicateNames(x);
+        //outputResults[1]=x;
+        //writer.writeRecords([outputResults]);
         //console.log(x);
         //findAttrs(rawData);
-        //let jsonObj = parser.parse(x);
-        //console.log(JSON.stringify(jsonObj,null,4));
+        var jsonObj = parser.parse(x);
+        console.log(JSON.stringify(jsonObj, null, 4));
         //let temp:models.Adf = jsonObj;
-        //console.log(jsonObj.adf.prospect.email.value);
         /* */
     }
     else {
         //invalid XML, do nothing
     }
 }
+//A function to help me search for attribute values
 function findAttrs(myXML) {
     var Doc = Dparser.parseFromString(myXML, "text/xml");
     var names = Doc.getElementsByTagName("email");
@@ -59,15 +61,34 @@ function findAttrs(myXML) {
     }
     console.log(attrs);
 }
+//converts a phone tag into a phone object
+function manipulatePhones(myXML) {
+    var Doc = Dparser.parseFromString(myXML, "text/xml");
+    var phones = getAllTagsOfType(Doc, "phone");
+    for (var i = 0; i < phones.length; i++) {
+        var newNode = Doc.createElement("phone");
+        var valNode = Doc.createElement("value");
+        var valText = "";
+        try {
+            valText = Doc.createTextNode(phones[i].firstChild.nodeValue);
+        }
+        catch (error) {
+            Doc.removeChild(phones[i]);
+            continue; //no number so do not care about this data
+        }
+        valNode.appendChild(valText);
+        newNode.appendChild(valNode);
+        attributeToElement('preferredcontact', newNode, phones[i], Doc);
+        attributeToElement('type', newNode, phones[i], Doc);
+        attributeToElement('time', newNode, phones[i], Doc);
+        Doc.replaceChild(newNode, phones[i]);
+    }
+    return DtoString.serializeToString(Doc);
+}
+//converts an email tag into an email object
 function manipulateEmails(myXML) {
     var Doc = Dparser.parseFromString(myXML, "text/xml");
-    var allTags = Doc.getElementsByTagName("*");
-    var emails = [];
-    for (var i = 0; i < allTags.length; i++) {
-        if (allTags[i].tagName == "email") {
-            emails.push(allTags[i]);
-        }
-    }
+    var emails = getAllTagsOfType(Doc, "email");
     for (var i = 0; i < emails.length; i++) {
         var newNode = Doc.createElement("email");
         var valNode = Doc.createElement("value");
@@ -75,30 +96,32 @@ function manipulateEmails(myXML) {
         try {
             valText = Doc.createTextNode(emails[i].firstChild.nodeValue);
         }
-        catch (error) { }
+        catch (error) {
+            Doc.removeChild(emails[i]);
+            continue; //no address so do not care about this data
+        }
         valNode.appendChild(valText);
         newNode.appendChild(valNode);
-        if (emails[i].getAttribute('preferredcontact') != '') {
-            var contactNode = Doc.createElement("preferredcontact");
-            var contactText = Doc.createTextNode(emails[i].getAttribute('preferredcontact'));
-            contactNode.appendChild(contactText);
-            newNode.appendChild(contactNode);
-        }
+        attributeToElement('preferredcontact', newNode, emails[i], Doc);
         Doc.replaceChild(newNode, emails[i]);
     }
     return DtoString.serializeToString(Doc);
+}
+//converts an attribute into an element node and adds it to a desired parent node
+//attr the attribute name, newNode the freshly created node to hold the object, node the node to add the new element to, Doc the main xml document object
+function attributeToElement(attr, newNode, node, Doc) {
+    if (node.getAttribute(attr) != '') {
+        var elemNode = Doc.createElement(attr);
+        var elemText = Doc.createTextNode(node.getAttribute(attr));
+        elemNode.appendChild(elemText);
+        newNode.appendChild(elemNode);
+    }
 }
 //right now just returns every instance of the name tag, and if it has a part associated to it that as well
 //returns the xml string after the names have been condensed
 function manipulateNames(myXML) {
     var Doc = Dparser.parseFromString(myXML, "text/xml");
-    var allTags = Doc.getElementsByTagName("*");
-    var names = [];
-    for (var i = 0; i < allTags.length; i++) {
-        if (allTags[i].tagName == "name") {
-            names.push(allTags[i]);
-        }
-    }
+    var names = getAllTagsOfType(Doc, "name");
     var first = "";
     var middle = "";
     var last = "";
@@ -318,4 +341,29 @@ function firstNamePart(node, str, strValue, fullName) {
         str = "";
     }
     return str;
+}
+function removeDuplicateNames(myXML) {
+    var Doc = Dparser.parseFromString(myXML, "text/xml");
+    var names = getAllTagsOfType(Doc, "name");
+    for (var i = 0; i < names.length - 1; i++) {
+        for (var j = i + 1; j < names.length; j++) {
+            if (names[i].parentNode == names[j].parentNode) {
+                if (names[i].firstChild.nodeValue == names[j].firstChild.nodeValue) {
+                    Doc.removeChild(names[i]);
+                }
+            }
+        }
+    }
+    return DtoString.serializeToString(Doc);
+}
+//returns all of the tags in the given document object that are of the type of str
+function getAllTagsOfType(Doc, str) {
+    var allTags = Doc.getElementsByTagName("*");
+    var tags = [];
+    for (var i = 0; i < allTags.length; i++) {
+        if (allTags[i].tagName == str) {
+            tags.push(allTags[i]);
+        }
+    }
+    return tags;
 }
