@@ -22,7 +22,7 @@ var writer = writerBuilder({
 });
 var outputResults = ["0", "Default"];
 //this appears to be a it gets done as it comes in function, which is why things aren't behaving the way I expect, need to update items as needed
-fs.createReadStream('adf_raw.csv')
+fs.createReadStream('experiment.csv')
     .pipe(csv(["Id", "adf"]))
     .on('data', function (data) {
     //data.Id will return the Id number (As a string? not used to typing in ts yet)
@@ -35,12 +35,17 @@ function validation(rawData) {
         allowBooleanAttributes: true
     });
     if (typeof result == "boolean") {
-        var jsonObj = parser.parse(rawData);
-        var x = manipulate(rawData);
-        outputResults[1] = x;
-        writer.writeRecords([outputResults]);
+        var x = manipulateEmails(rawData);
+        x = manipulateNames(x);
+        //outputResults[1]=x;
+        //writer.writeRecords([outputResults]);
         //console.log(x);
         //findAttrs(rawData);
+        var jsonObj = parser.parse(x);
+        console.log(JSON.stringify(jsonObj, null, 4));
+        //let temp:models.Adf = jsonObj;
+        //console.log(jsonObj.adf.prospect.email.value);
+        /* */
     }
     else {
         //invalid XML, do nothing
@@ -48,15 +53,40 @@ function validation(rawData) {
 }
 function findAttrs(myXML) {
     var Doc = Dparser.parseFromString(myXML, "text/xml");
-    var names = Doc.getElementsByTagName("name");
+    var names = Doc.getElementsByTagName("email");
     for (var i = 0; i < names.length; i++) {
-        attrs.add(names[i].getAttribute('type'));
+        attrs.add(names[i].getAttribute('preferredcontact'));
     }
     console.log(attrs);
 }
+function manipulateEmails(myXML) {
+    var Doc = Dparser.parseFromString(myXML, "text/xml");
+    var allTags = Doc.getElementsByTagName("*");
+    var emails = [];
+    for (var i = 0; i < allTags.length; i++) {
+        if (allTags[i].tagName == "email") {
+            emails.push(allTags[i]);
+        }
+    }
+    for (var i = 0; i < emails.length; i++) {
+        var newNode = Doc.createElement("email");
+        var valNode = Doc.createElement("value");
+        var valText = Doc.createTextNode(emails[i].firstChild.nodeValue);
+        valNode.appendChild(valText);
+        newNode.appendChild(valNode);
+        if (emails[i].getAttribute('preferredcontact') != '') {
+            var contactNode = Doc.createElement("preferredcontact");
+            var contactText = Doc.createTextNode(emails[i].getAttribute('preferredcontact'));
+            contactNode.appendChild(contactText);
+            newNode.appendChild(contactNode);
+        }
+        Doc.replaceChild(newNode, emails[i]);
+    }
+    return DtoString.serializeToString(Doc);
+}
 //right now just returns every instance of the name tag, and if it has a part associated to it that as well
 //returns the xml string after the names have been condensed
-function manipulate(myXML) {
+function manipulateNames(myXML) {
     var Doc = Dparser.parseFromString(myXML, "text/xml");
     var allTags = Doc.getElementsByTagName("*");
     var names = [];
